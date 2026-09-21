@@ -17,6 +17,8 @@
 #include "isobus/isobus/isobus_virtual_terminal_server_managed_working_set.hpp"
 #include "isobus/utility/event_dispatcher.hpp"
 
+#include <optional>
+
 namespace isobus
 {
 	/// @brief This class is an abstract VT server interface.
