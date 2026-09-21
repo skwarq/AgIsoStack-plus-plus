@@ -6370,11 +6370,15 @@ namespace isobus
 				}
 				break;
 
-				case AttributeName::FontType:
-				{
-					set_type(static_cast<FontAttributes::FontType>(rawAttributeData));
-					retVal = true;
-				}
+					case AttributeName::FontType:
+					{
+						const auto oldType = get_type();
+						set_type(static_cast<FontAttributes::FontType>(rawAttributeData));
+						LOG_DEBUG("[WS Font] Font Attributes fontType changed %u -> %u",
+						         static_cast<unsigned int>(oldType),
+						         static_cast<unsigned int>(get_type()));
+						retVal = true;
+					}
 				break;
 
 				case AttributeName::FontStyle:

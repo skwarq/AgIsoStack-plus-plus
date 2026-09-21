@@ -1225,6 +1225,7 @@ namespace isobus
 					{
 						send_change_attribute_response(objectID, 0, data.at(3), message.get_source_control_function());
 						LOG_DEBUG("[VT Server]: Client %u changed object %u attribute %u to %u", managedWorkingSet->get_control_function()->get_address(), objectID, attributeID, attributeData);
+						on_object_attribute_changed(managedWorkingSet->get_control_function()->get_NAME(), objectID, attributeID, attributeData, managedWorkingSet->get_iop_object_location(objectID));
 						onRepaintEventDispatcher.call(managedWorkingSet);
 						process_macro(targetObject, EventID::OnChangeAttribute, targetObject->get_object_type(), managedWorkingSet);
 					}
@@ -1415,6 +1416,11 @@ namespace isobus
 						font->set_colour(fontColour);
 						font->set_size(static_cast<FontAttributes::FontSize>(fontSize));
 						font->set_type(static_cast<FontAttributes::FontType>(fontType));
+						on_object_attribute_changed(managedWorkingSet->get_control_function()->get_NAME(),
+						                          objectID,
+						                          static_cast<std::uint8_t>(FontAttributes::AttributeName::FontType),
+						                          fontType,
+						                          managedWorkingSet->get_iop_object_location(objectID));
 						font->set_style(fontStyle);
 						LOG_DEBUG("[VT Server]: Client %u change font attributes command: ObjectID: %u", managedWorkingSet->get_control_function()->get_address(), objectID);
 						send_change_font_attributes_response(objectID, 0, message.get_source_control_function());

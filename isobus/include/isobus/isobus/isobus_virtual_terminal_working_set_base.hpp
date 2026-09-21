@@ -13,6 +13,7 @@
 #include "isobus/isobus/isobus_virtual_terminal_objects.hpp"
 
 #include <mutex>
+#include <optional>
 
 namespace isobus
 {
@@ -21,11 +22,17 @@ namespace isobus
 	class VirtualTerminalWorkingSetBase
 	{
 	public:
+		struct IopObjectLocation
+		{
+			std::size_t componentIndex = 0;
+			std::size_t offset = 0;
+		};
 		/// @brief Takes a raw block of IOP data and parses it into VT objects
 		/// @param[in] iopData A pointer to the raw IOP data
 		/// @param[in] iopLength The length of the raw IOP data
 		/// @returns true if the IOP data was parsed successfully, otherwise false
-		bool parse_iop_into_objects(std::uint8_t *iopData, std::uint32_t iopLength);
+		bool parse_iop_into_objects(std::uint8_t *iopData, std::uint32_t iopLength, std::size_t componentIndex = 0);
+		std::optional<IopObjectLocation> get_iop_object_location(std::uint16_t objectID) const;
 
 		/// @brief Returns a colour from this working set's current colour table, by index
 		/// @param[in] colourIndex The index into the VT's colour table to retrieve
@@ -121,6 +128,7 @@ namespace isobus
 		std::uint32_t iopSize = 0; ///< Total size of the IOP in bytes
 		std::uint32_t transferredIopSize = 0; ///< Total number of IOP bytes transferred
 		std::map<std::uint16_t, std::shared_ptr<VTObject>> vtObjectTree; ///< The C++ object representation (deserialized) of the object pool being managed
+		std::map<std::uint16_t, IopObjectLocation> iopObjectLocations;
 		std::vector<IopDataComponent> iopFilesRawData; ///< Raw IOP data from the client
 		std::uint16_t workingSetID = NULL_OBJECT_ID; ///< Stores the object ID of the working set object itself
 		std::uint16_t faultingObjectID = NULL_OBJECT_ID; ///< Stores the faulting object ID to send to a client when parsing the pool fails

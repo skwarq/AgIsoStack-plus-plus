@@ -179,6 +179,9 @@ namespace isobus
 		/// @returns A vector of object pool versions available for the client
 		virtual std::vector<std::array<std::uint8_t, 7>> get_versions(NAME clientNAME) = 0;
 
+		/// @brief Called after a client changes a writable object attribute successfully.
+		virtual void on_object_attribute_changed(NAME, std::uint16_t, std::uint8_t, std::uint32_t, std::optional<VirtualTerminalWorkingSetBase::IopObjectLocation>) {}
+
 		/// @brief This function is called when the interface needs to know what objects are supported by the server.
 		/// @returns A vector of supported objects
 		virtual std::vector<std::uint8_t> get_supported_objects() const = 0;

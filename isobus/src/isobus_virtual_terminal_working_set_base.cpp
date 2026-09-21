@@ -107,12 +107,31 @@ namespace isobus
 		return vtObjectTree;
 	}
 
+	std::optional<VirtualTerminalWorkingSetBase::IopObjectLocation> VirtualTerminalWorkingSetBase::get_iop_object_location(std::uint16_t objectID) const
+	{
+		const auto it = iopObjectLocations.find(objectID);
+		if (it == iopObjectLocations.end())
+		{
+			return std::nullopt;
+		}
+		return it->second;
+	}
+
 	bool VirtualTerminalWorkingSetBase::add_or_replace_object(std::shared_ptr<VTObject> objectToAdd)
 	{
 		bool retVal = false;
 
 		if (nullptr != objectToAdd)
 		{
+			const auto existingObject = vtObjectTree.find(objectToAdd->get_id());
+			if (VirtualTerminalObjectType::FontAttributes == objectToAdd->get_object_type())
+			{
+				auto fontAttributes = std::static_pointer_cast<FontAttributes>(objectToAdd);
+				LOG_DEBUG("[WS IOP] Font Attributes id=%u fontType=%u action=%s",
+				         static_cast<unsigned int>(objectToAdd->get_id()),
+				         static_cast<unsigned int>(fontAttributes->get_type()),
+				         (existingObject != vtObjectTree.end()) ? "replace" : "add");
+			}
 			vtObjectTree[objectToAdd->get_id()] = objectToAdd;
 			retVal = true;
 		}
@@ -2442,8 +2461,9 @@ namespace isobus
 		return retVal;
 	}
 
-	bool VirtualTerminalWorkingSetBase::parse_iop_into_objects(std::uint8_t *iopData, std::uint32_t iopLength)
+	bool VirtualTerminalWorkingSetBase::parse_iop_into_objects(std::uint8_t *iopData, std::uint32_t iopLength, std::size_t componentIndex)
 	{
+		const auto componentStart = iopData;
 		std::uint32_t remainingLength = iopLength;
 		std::uint8_t *currentIopPointer = iopData;
 		bool retVal = true;
@@ -2452,12 +2472,21 @@ namespace isobus
 		{
 			while (remainingLength > 0)
 			{
+				if (remainingLength < 2)
+				{
+					LOG_ERROR("[WS]: Parsing object pool failed: incomplete object ID.");
+					retVal = false;
+					break;
+				}
+				const auto objectStart = currentIopPointer;
+				const auto objectID = get_little_endian_uint16(objectStart, 0);
 				if (!parse_next_object(currentIopPointer, remainingLength))
 				{
 					LOG_ERROR("[WS]: Parsing object pool failed.");
 					retVal = false;
 					break;
 				}
+				iopObjectLocations[objectID] = { componentIndex, static_cast<std::size_t>(objectStart - componentStart) };
 			}
 		}
 		else

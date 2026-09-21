@@ -190,7 +190,7 @@ namespace isobus
 					continue;
 				}
 
-				if (!parse_iop_into_objects(iopFilesRawData[i].data.data(), static_cast<std::uint32_t>(iopFilesRawData[i].data.size())))
+				if (!parse_iop_into_objects(iopFilesRawData[i].data.data(), static_cast<std::uint32_t>(iopFilesRawData[i].data.size()), i))
 				{
 					lSuccess = false;
 					break;
