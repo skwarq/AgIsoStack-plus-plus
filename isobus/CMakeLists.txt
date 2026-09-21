@@ -156,7 +156,7 @@ endif()
 target_compile_definitions(
   Isobus PUBLIC CAN_PORT_MAXIMUM_VALUE=${CAN_PORT_MAXIMUM_VALUE})
 
-target_compile_features(Isobus PUBLIC cxx_std_11)
+target_compile_features(Isobus PUBLIC cxx_std_17)
 set_target_properties(Isobus PROPERTIES CXX_EXTENSIONS OFF)
 
 if(DISABLE_CAN_STACK_LOGGER)
