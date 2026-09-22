@@ -303,7 +303,9 @@ namespace isobus
 	{
 		if (!started)
 		{
-			LOG_ERROR("[HardwareInterface] Cannot transmit message before interface is started.");
+			// Transmit requests can race with an intentional interface stop. This
+			// is not a hardware error and must not flood the application log.
+			LOG_DEBUG("[HardwareInterface] Ignoring transmit request because the interface is stopped.");
 			return false;
 		}
 
