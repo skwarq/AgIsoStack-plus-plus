@@ -771,9 +771,10 @@ namespace isobus
 			}
 
 			// Remove any CF that has the same address as the one claiming
+			bool internalControlFunctionWonContention = false;
 			std::for_each(controlFunctionTable[rxFrame.channel].begin(),
 			              controlFunctionTable[rxFrame.channel].end(),
-			              [&foundControlFunction, &claimedAddress, &claimedNAME](const std::shared_ptr<ControlFunction> &cf) {
+			              [&foundControlFunction, &claimedAddress, &claimedNAME, &internalControlFunctionWonContention](const std::shared_ptr<ControlFunction> &cf) {
 				              bool wonContention = false;
 
 				              if ((nullptr != cf) && (foundControlFunction != cf) && (cf->get_address() == claimedAddress))
@@ -805,6 +806,7 @@ namespace isobus
 									                        claimedNAME);
 									              std::static_pointer_cast<InternalControlFunction>(cf)->set_current_state(InternalControlFunction::State::SendReclaimAddressOnRequest);
 									              wonContention = true;
+									              internalControlFunctionWonContention = true;
 								              }
 								              else
 								              {
@@ -830,6 +832,13 @@ namespace isobus
 					              }
 				              }
 			              });
+
+			// A claimant that loses to one of our internal CFs must not replace the
+			// winner in the active-address table. The winner will re-announce below.
+			if (internalControlFunctionWonContention)
+			{
+				return;
+			}
 
 			std::for_each(inactiveControlFunctions.begin(),
 			              inactiveControlFunctions.end(),

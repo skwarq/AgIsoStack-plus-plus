@@ -76,6 +76,55 @@ TEST_F(AddressClaimTest, AddressClaim_PartneredClaim)
 	CANNetworkManager::CANNetwork.deactivate_control_function(secondInternalECU2);
 }
 
+TEST_F(AddressClaimTest, LocalWinnerIsNotReplacedByLosingClaim)
+{
+	auto plugin = std::make_shared<VirtualCANPlugin>();
+	plugin->open();
+	CANHardwareInterface::set_number_of_can_channels(1);
+	CANHardwareInterface::assign_can_channel_frame_handler(0, plugin);
+	CANHardwareInterface::start(false);
+
+	time_source.update_for_ms(250);
+
+	constexpr std::uint8_t preferredAddress = 0x26;
+	NAME localName(0);
+	localName.set_arbitrary_address_capable(true);
+	localName.set_industry_group(2);
+	localName.set_function_code(static_cast<std::uint8_t>(NAME::Function::VirtualTerminal));
+	localName.set_identity_number(1);
+	localName.set_function_instance(0);
+	localName.set_manufacturer_code(1407);
+	auto localCF = CANNetworkManager::CANNetwork.create_internal_control_function(localName, 0, preferredAddress);
+
+	time_source.update_for_ms(1500);
+	ASSERT_TRUE(localCF->get_address_valid());
+	ASSERT_EQ(preferredAddress, localCF->get_address());
+
+	NAME losingName = localName;
+	losingName.set_identity_number(2);
+	const auto fullName = losingName.get_full_name();
+	CANMessageFrame losingClaim{};
+	losingClaim.channel = 0;
+	losingClaim.identifier = 0x18EEFF00 | preferredAddress;
+	losingClaim.isExtendedFrame = true;
+	losingClaim.dataLength = CAN_DATA_LENGTH;
+	losingClaim.data[0] = static_cast<std::uint8_t>(fullName);
+	losingClaim.data[1] = static_cast<std::uint8_t>(fullName >> 8);
+	losingClaim.data[2] = static_cast<std::uint8_t>(fullName >> 16);
+	losingClaim.data[3] = static_cast<std::uint8_t>(fullName >> 24);
+	losingClaim.data[4] = static_cast<std::uint8_t>(fullName >> 32);
+	losingClaim.data[5] = static_cast<std::uint8_t>(fullName >> 40);
+	losingClaim.data[6] = static_cast<std::uint8_t>(fullName >> 48);
+	losingClaim.data[7] = static_cast<std::uint8_t>(fullName >> 56);
+	CANNetworkManager::CANNetwork.process_receive_can_message_frame(losingClaim);
+
+	EXPECT_EQ(localCF, CANNetworkManager::CANNetwork.get_control_function(0, preferredAddress));
+	EXPECT_EQ(InternalControlFunction::State::SendReclaimAddressOnRequest, localCF->get_current_state());
+
+	CANHardwareInterface::stop();
+	CANNetworkManager::CANNetwork.deactivate_control_function(localCF);
+}
+
 TEST_F(AddressClaimTest, CannotClaim)
 {
 	VirtualCANPlugin plugin;

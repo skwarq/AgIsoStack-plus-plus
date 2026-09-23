@@ -78,9 +78,10 @@ namespace isobus
 		/// @returns The PGN request protocol for this ICF
 		std::weak_ptr<ParameterGroupNumberRequestProtocol> get_pgn_request_protocol() const;
 
-		/// @brief Validates that a CAN message has not caused an address violation for this ICF.
-		/// If a violation is found, a re-claim will be executed for as is required by ISO 11783-5,
-		/// and will attempt to activate a DTC that is defined in ISO 11783-5.
+		/// @brief Validates that CAN traffic has not caused an address violation for this ICF.
+		/// Address-claimed messages are arbitrated by CANNetworkManager using the NAME priority;
+		/// this check handles traffic received from an address already claimed by this ICF.
+		/// If a violation is found, the ICF re-announces its current address as required by ISO 11783-5.
 		/// This function is for advanced use cases only. Normally, the network manager will call this
 		/// for every message received.
 		/// @note Address violation occurs when two CFs are using the same source address.

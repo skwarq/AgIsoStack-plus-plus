@@ -17,10 +17,24 @@
 
 #include <algorithm>
 #include <cassert>
+#include <mutex>
 #include <random>
 
 namespace isobus
 {
+	namespace
+	{
+		std::uint8_t generate_random_claim_delay_ms()
+		{
+			static std::random_device randomDevice;
+			static std::mt19937 generator(randomDevice());
+			static std::mutex generatorMutex;
+			std::lock_guard<std::mutex> lock(generatorMutex);
+			std::uniform_int_distribution<unsigned short> distribution(0, 255);
+			return static_cast<std::uint8_t>(distribution(generator) * 0.6);
+		}
+	} // namespace
+
 	InternalControlFunction::InternalControlFunction(NAME desiredName, std::uint8_t preferredAddress, std::uint8_t CANPort) :
 	  ControlFunction(desiredName, NULL_CAN_ADDRESS, CANPort, Type::Internal),
 	  preferredAddress(preferredAddress)
@@ -34,9 +48,7 @@ namespace isobus
 			assert(desiredName.get_arbitrary_address_capable());
 		}
 
-		std::default_random_engine generator;
-		std::uniform_int_distribution<unsigned short> distribution(0, 255);
-		randomClaimDelay_ms = static_cast<std::uint8_t>(distribution(generator) * 0.6); // Defined by ISO part 5
+		randomClaimDelay_ms = generate_random_claim_delay_ms(); // Defined by ISO part 5
 	}
 
 	InternalControlFunction::State InternalControlFunction::get_current_state() const

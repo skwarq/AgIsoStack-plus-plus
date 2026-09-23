@@ -119,9 +119,11 @@ A NAME has the following components in it:
 Address Claiming
 ^^^^^^^^^^^^^^^^^
 
-J1939 and ISOBUS define a process called *address claiming* which very deterministically assigns a control function an address based on their *NAMEs* 
+J1939 and ISOBUS define a process called *address claiming* which assigns a control function (CF) a source address based on its *NAME*.
 
-The library will handle this for you completely, but it's important to know it exists, as this is what ties a NAME to an address.
+The stack claims the configured preferred address when available. When it receives an Address Claimed message for an address already used by a local CF, it compares the 64-bit NAME values: the lower numerical NAME wins. The winner re-announces its address; a losing self-configurable CF re-enters address claiming and attempts to claim an available dynamic address. A CF's address can therefore change while the application is running; query ``get_address()`` and ``get_address_valid()`` instead of assuming the preferred address remains in use.
+
+Every CF on an ISO 11783 network must have a unique NAME. Two devices with identical NAMEs cannot be distinguished or resolved by NAME arbitration. The application is responsible for constructing unique NAMEs. See ISO 11783-5 for the normative requirements; this overview describes the stack behavior and is not a conformance claim.
 
 Review
 ^^^^^^^

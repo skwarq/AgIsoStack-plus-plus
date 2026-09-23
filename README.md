@@ -48,6 +48,12 @@ ISOBUS (based on the ISO-11783 standard) defines how agricultural machinery shou
 AgIsoStack++ provides an easy-to-use interface for your application to communicate on the ISOBUS network in a compliant manner, without the need to worry about the details of the standard.
 The library is is written in modern C++11 and uses the STL whenever possible. It is designed to be easy to understand is fully documented.
 
+## Network management and address claiming
+
+Each internal Control Function (CF) claims its configured preferred source address during startup. Address Claimed messages for an address already used by a local CF are compared by their 64-bit NAME: the lower numerical NAME wins and re-announces the address; a losing self-configurable CF re-enters address claiming and attempts to use an available dynamic address. The assigned address may change at runtime, so applications should use ``get_address()`` and ``get_address_valid()`` rather than assume the preferred address remains assigned.
+
+Every CF on an ISO 11783 network must have a unique NAME. The stack cannot arbitrate two different devices that use the same NAME; applications must configure unique NAME values. See the [Concepts documentation](sphinx/source/Concepts.rst) and ISO 11783-5 for details. Address-claim regression tests are in ``test/address_claim_tests.cpp``.
+
 ## Getting Started
 
 Check out the [tutorial website](https://agisostack-plus-plus.readthedocs.io/en/latest/) for information on ISOBUS basics, how to download this library, and how to use it. The tutorials contain in-depth examples and explanations to help get your ISOBUS or J1939 project going quickly.
